@@ -12,6 +12,22 @@
       <p class="subtitle">Call of Cthulhu 7e - AI Keeper</p>
     </div>
 
+    <div v-if="saves.length > 0" class="saves-section panel">
+      <div class="panel-title">// CONTINUE GAME</div>
+      <div
+        v-for="s in saves"
+        :key="s.filename"
+        class="save-card"
+        @click="resumeGame(s)"
+      >
+        <div class="save-title">{{ s.scenario_title || s.scenario_id }}</div>
+        <div class="save-meta">
+          {{ s.characters.join(', ') || 'No character' }} | {{ s.phase }} | {{ s.slot }}
+        </div>
+        <div class="save-time">{{ formatTime(s.modified) }}</div>
+      </div>
+    </div>
+
     <div class="scenarios-section panel">
       <div class="panel-title">// SELECT SCENARIO</div>
       <div v-if="loading" class="loading">Loading...</div>
@@ -40,20 +56,37 @@ const config = useRuntimeConfig();
 const router = useRouter();
 
 const scenarios = ref<any[]>([]);
+const saves = ref<any[]>([]);
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    const data = await $fetch<any[]>(
-      `${config.public.apiBase}/api/scenarios`
-    );
-    scenarios.value = data;
-  } catch {
-    scenarios.value = [];
+    const [scenarioData, saveData] = await Promise.all([
+      $fetch<any[]>(`${config.public.apiBase}/api/scenarios`).catch(() => []),
+      $fetch<any>(`${config.public.apiBase}/api/saves`).catch(() => ({ saves: [] })),
+    ]);
+    scenarios.value = scenarioData;
+    saves.value = saveData.saves || [];
   } finally {
     loading.value = false;
   }
 });
+
+function formatTime(ts: number) {
+  return new Date(ts * 1000).toLocaleString();
+}
+
+async function resumeGame(save: any) {
+  try {
+    const result = await $fetch<any>(
+      `${config.public.apiBase}/api/sessions/resume`,
+      { method: "POST", body: { filename: save.filename } }
+    );
+    router.push(`/session/${result.session_id}/game`);
+  } catch (e) {
+    console.error("Failed to resume:", e);
+  }
+}
 
 async function selectScenario(s: any) {
   try {
@@ -117,5 +150,32 @@ async function selectScenario(s: any) {
   color: var(--text-dim);
   padding: 20px;
   text-align: center;
+}
+.saves-section {
+  margin-bottom: 24px;
+}
+.save-card {
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.save-card:hover {
+  border-color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.save-title {
+  color: var(--text-primary);
+  font-size: 18px;
+}
+.save-meta {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: 4px 0;
+}
+.save-time {
+  color: var(--text-dim);
+  font-size: 12px;
 }
 </style>

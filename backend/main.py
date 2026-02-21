@@ -24,6 +24,11 @@ def create_app() -> FastAPI:
     async def health_check():
         return {"status": "ok"}
 
+    @app.get("/api/saves")
+    async def list_all_saves():
+        from backend.core.game_engine import GameEngine
+        return {"saves": GameEngine.list_all_saves()}
+
     return app
 
 

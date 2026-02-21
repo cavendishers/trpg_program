@@ -221,6 +221,7 @@ class GameEngine:
             "session": self.session.model_dump(),
             "phase": self.state.phase.value,
             "scenario_id": self.scenario.meta.id,
+            "scenario_title": self.scenario.meta.title,
             "characters": chars_data,
             "keeper_history": self.keeper.history,
             "keeper_tokens": self.keeper._total_tokens,
@@ -266,6 +267,34 @@ class GameEngine:
                 "modified": stat.st_mtime,
             })
         return sorted(saves, key=lambda s: s["modified"], reverse=True)
+
+    @staticmethod
+    def list_all_saves() -> list[dict]:
+        """List all save files across all sessions."""
+        if not SAVES_DIR.exists():
+            return []
+        results = []
+        for f in SAVES_DIR.glob("*.json"):
+            try:
+                data = json.loads(f.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            pc_names = [
+                c.get("name", "")
+                for c in data.get("characters", {}).values()
+                if not c.get("is_npc", False)
+            ]
+            results.append({
+                "filename": f.name,
+                "session_id": data.get("session", {}).get("id", ""),
+                "scenario_id": data.get("scenario_id", ""),
+                "scenario_title": data.get("scenario_title", data.get("scenario_id", "")),
+                "phase": data.get("phase", ""),
+                "slot": f.stem.split("_", 1)[1] if "_" in f.stem else "unknown",
+                "characters": pc_names,
+                "modified": f.stat().st_mtime,
+            })
+        return sorted(results, key=lambda s: s["modified"], reverse=True)
 
     def load_from_file(self, slot: str = "auto") -> bool:
         """Load game state from a JSON file. Returns True if successful."""

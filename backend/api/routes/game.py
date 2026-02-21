@@ -36,7 +36,7 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 "atmosphere": opening.get("atmosphere", "calm"),
             })
         else:
-            # Reconnection: replay last AI narrative so player has context
+            # Reconnection / resume: replay last AI narrative
             for entry in engine.keeper.history[-2:]:
                 if entry["role"] == "assistant":
                     from backend.ai.response_parser import parse_response
@@ -51,6 +51,21 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                             "type": "narrative",
                             "content": entry["content"],
                         })
+
+            # Sync discovered clues
+            for clue_id in engine.guardian.discovered_clues:
+                clue = engine.scenario.clues.get(clue_id)
+                if clue:
+                    await websocket.send_json({
+                        "type": "clue_discovered",
+                        "clue_id": clue_id,
+                        "description": clue.description,
+                    })
+
+            await websocket.send_json({
+                "type": "system",
+                "content": "已从存档恢复，继续你的冒险...",
+            })
 
         while True:
             data = await websocket.receive_json()

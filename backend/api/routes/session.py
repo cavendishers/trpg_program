@@ -1,9 +1,11 @@
 """Game session management endpoints."""
 
+import json
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.core.game_engine import GameEngine
+from backend.core.game_engine import GameEngine, SAVES_DIR
 from backend.dependencies import (
     get_ai_provider,
     get_character_service,
@@ -83,6 +85,46 @@ async def delete_session(session_id: str):
 
 class SaveRequest(BaseModel):
     slot: str = "auto"
+
+
+class ResumeRequest(BaseModel):
+    filename: str
+
+
+@router.post("/resume")
+async def resume_session(req: ResumeRequest):
+    """Create a new session from a save file."""
+    path = SAVES_DIR / req.filename
+    if not path.exists():
+        raise HTTPException(404, "Save file not found")
+    try:
+        save_data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        raise HTTPException(422, "Save file is corrupted")
+
+    scenario_id = save_data.get("scenario_id", "")
+    loader = get_scenario_loader()
+    try:
+        scenario = loader.load(scenario_id)
+    except FileNotFoundError:
+        raise HTTPException(409, f"Scenario not found: {scenario_id}")
+
+    provider = get_ai_provider()
+    chars = get_character_service()
+    engine = GameEngine(provider, scenario, chars)
+    engine.load_save_data(save_data)
+
+    # Reuse original session ID so auto-save overwrites the same file
+    old_id = save_data.get("session", {}).get("id", engine.session.id)
+    engine.session.id = old_id
+    _sessions[old_id] = engine
+
+    return {
+        "session_id": old_id,
+        "scenario": scenario.meta.title,
+        "phase": engine.state.phase.value,
+        "resumed": True,
+    }
 
 
 @router.post("/{session_id}/save")
