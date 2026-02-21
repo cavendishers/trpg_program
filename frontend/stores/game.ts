@@ -4,6 +4,11 @@ interface Character {
   id: string;
   name: string;
   is_npc: boolean;
+  occupation?: string;
+  characteristics?: {
+    STR: number; CON: number; SIZ: number; DEX: number;
+    APP: number; INT: number; POW: number; EDU: number;
+  };
   derived: {
     hp: number;
     hp_max: number;
@@ -12,8 +17,11 @@ interface Character {
     mp: number;
     mp_max: number;
     luck: number;
+    damage_bonus?: string;
+    build?: number;
+    move_rate?: number;
   };
-  skills: Record<string, { name: string; current_value: number }>;
+  skills: Record<string, { name: string; base_value: number; current_value: number }>;
   inventory: string[];
   conditions: string[];
 }
