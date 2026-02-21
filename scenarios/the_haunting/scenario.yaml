@@ -1,0 +1,112 @@
+meta:
+  id: "the_haunting"
+  title: "鬼屋惊魂"
+  era: "1920s"
+  player_count: { min: 1, max: 4 }
+  difficulty: "introductory"
+  synopsis: "调查员受雇调查一栋闹鬼的房子，真相是地下室中沉睡的邪教巫师的亡灵..."
+
+keeper_guide: |
+  本剧本的核心恐怖来源是未知与渐进式揭示。
+  前半段应以调查和氛围营造为主，后半段转入直面恐怖。
+  关键节奏：好奇 → 不安 → 恐惧 → 绝望/逃脱。
+  不要一开始就展示超自然现象，让玩家先感受到"不对劲"。
+
+key_plot_points:
+  - id: "hire"
+    description: "调查员接受委托，了解房子的基本情况"
+    required_clues: ["house_address"]
+
+  - id: "investigation"
+    description: "调查房子的历史背景"
+    available_sources: ["library", "newspaper", "town_hall", "hospital"]
+    key_discoveries: ["corbitt_history", "chapel_connection"]
+
+  - id: "house_exploration"
+    description: "进入并探索鬼屋"
+    depends_on: ["hire"]
+    hazards: ["supernatural_events"]
+
+  - id: "final_confrontation"
+    description: "在地下室面对 Corbitt 的鬼魂"
+    depends_on: ["house_exploration"]
+
+endings:
+  - id: "victory"
+    condition: "销毁 Corbitt 的遗体或将其驱逐"
+    san_reward: "1d10"
+  - id: "escape"
+    condition: "调查员逃离鬼屋，Corbitt 仍在"
+    san_reward: "1d4"
+  - id: "tpk"
+    condition: "所有调查员死亡或永久疯狂"
+
+npcs:
+  knott:
+    name: "Arnold Knott"
+    role: "patron"
+    description: "50多岁的秃顶男人，房产中介"
+    personality: "焦虑、回避细节、真心想解决问题"
+    knows:
+      - "房子已经多年租不出去"
+      - "上一个租客出了事（不愿主动提及）"
+    dialogue_style: "紧张、说话时擦汗、避免眼神接触"
+
+  corbitt:
+    name: "Walter Corbitt"
+    role: "antagonist"
+    description: "19世纪的邪教巫师，死后以鬼魂形态存在"
+    combat_stats:
+      STR: 80
+      CON: 100
+      POW: 90
+      DEX: 65
+      HP: 16
+    abilities:
+      - name: "念力攻击"
+        damage: "1d6"
+      - name: "操控物体"
+        description: "让家具飞起、门窗猛关"
+    san_loss: { success: 0, failure: "1d6" }
+
+locations:
+  knott_office:
+    name: "Knott 的办公室"
+    atmosphere: "拥挤的小办公室，堆满文件，空气中弥漫着廉价咖啡的味道"
+
+  corbitt_house:
+    name: "Corbitt 宅邸"
+    atmosphere: "破败的两层小楼，空气中弥漫着霉味和某种说不清的腐臭"
+    areas:
+      - id: "ground_floor"
+        description: "布满灰尘的客厅和厨房，家具上覆盖着白布"
+        searchable: true
+        possible_finds: ["旧日记残页", "奇怪的符号"]
+      - id: "upstairs"
+        description: "凌乱的卧室，床单被撕裂"
+        hazards: ["家具会自己移动"]
+      - id: "basement"
+        description: "黑暗潮湿的地下室，需要找到隐藏的入口"
+        requires_discovery: true
+        contains: ["corbitt_coffin"]
+
+clues:
+  house_address:
+    description: "Corbitt 宅邸的地址"
+    importance: "critical"
+    discovery: "Knott 直接提供"
+
+  corbitt_history:
+    description: "Corbitt 是一个与邪教有关的人物"
+    importance: "critical"
+    discovery: "图书馆或报纸档案可查到"
+
+  chapel_connection:
+    description: "Corbitt 与一个地下教堂有关联"
+    importance: "important"
+    discovery: "市政厅记录或深入调查"
+
+  hidden_door:
+    description: "通往地下室的隐藏门"
+    importance: "important"
+    discovery: "仔细搜索一楼可发现"
