@@ -36,6 +36,7 @@
 import { useGameStore } from "~/stores/game";
 import { useGameSocket } from "~/composables/useGameSocket";
 
+const config = useRuntimeConfig();
 const route = useRoute();
 const store = useGameStore();
 const sessionId = route.params.id as string;
@@ -57,7 +58,21 @@ function handleSave() {
   saveGame("manual");
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch session state to populate character (critical for resume flow)
+  try {
+    const state = await $fetch<any>(
+      `${config.public.apiBase}/api/sessions/${sessionId}/state`
+    );
+    if (state.party?.length > 0) {
+      store.setCharacter(state.party[0]);
+    }
+    if (state.phase) {
+      store.updatePhase(state.phase);
+    }
+  } catch {
+    // Session state fetch failed, WebSocket will still work
+  }
   connect();
 });
 
