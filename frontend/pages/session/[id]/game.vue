@@ -5,6 +5,10 @@
         AI TRPG: {{ store.scenarioTitle || "Game" }}
       </span>
       <span class="header-actions">
+        <span v-if="store.turnState.mode === 'combat'" class="turn-badge combat">
+          COMBAT R{{ store.turnState.round_number }}
+        </span>
+        <span v-else class="turn-badge explore">EXPLORE</span>
         <button class="save-btn" @click="handleSave">SAVE</button>
       </span>
       <span class="header-status">
@@ -18,6 +22,17 @@
     <div class="game-body">
       <div class="main-column">
         <NarrativePanel :entries="store.narrativeLog" />
+        <div v-if="store.turnState.mode === 'combat'" class="combat-queue">
+          <span
+            v-for="(cid, idx) in store.turnState.turn_queue"
+            :key="cid"
+            class="queue-slot"
+            :class="{ 'queue-active': idx === store.turnState.current_index }"
+          >{{ getCharName(cid) }}</span>
+        </div>
+        <div class="action-label">
+          [ {{ store.activeCharacter?.name || '...' }} ] &gt;
+        </div>
         <ActionInput @send="handleSend" />
       </div>
 
@@ -26,8 +41,12 @@
           v-for="char in store.party"
           :key="char.id"
           class="party-member"
-          :class="{ active: char.id === store.activeCharacterId }"
-          @click="store.setActiveCharacter(char.id)"
+          :class="{
+            active: char.id === store.activeCharacterId,
+            'combat-current': store.turnState.mode === 'combat' && char.id === store.turnState.turn_queue[store.turnState.current_index],
+            'combat-disabled': store.turnState.mode === 'combat' && char.id !== store.turnState.turn_queue[store.turnState.current_index],
+          }"
+          @click="switchCharacter(char.id)"
         >
           <CharacterSheet
             v-if="char.id === store.activeCharacterId"
@@ -70,6 +89,15 @@ function handleSend(text: string) {
 
 function handleSave() {
   saveGame("manual");
+}
+
+function switchCharacter(id: string) {
+  if (store.turnState.mode === "combat") return;
+  store.setActiveCharacter(id);
+}
+
+function getCharName(id: string): string {
+  return store.party.find((c) => c.id === id)?.name || id;
 }
 
 onMounted(async () => {
@@ -186,5 +214,50 @@ onUnmounted(() => {
 }
 .mini-san {
   color: #6666ff;
+}
+.turn-badge {
+  padding: 2px 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.turn-badge.combat {
+  color: var(--text-red);
+  border: 1px solid var(--text-red);
+}
+.turn-badge.explore {
+  color: var(--text-primary);
+  border: 1px solid var(--text-dim);
+}
+.combat-queue {
+  display: flex;
+  gap: 4px;
+  padding: 6px 16px;
+  background: rgba(255, 50, 50, 0.08);
+  border-top: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+.queue-slot {
+  padding: 3px 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.queue-slot.queue-active {
+  color: var(--text-amber);
+  border-color: var(--text-amber);
+  background: rgba(255, 170, 0, 0.1);
+}
+.action-label {
+  padding: 4px 16px 0;
+  color: var(--text-amber);
+  font-size: 14px;
+}
+.combat-current {
+  border-left: 3px solid var(--text-red) !important;
+}
+.combat-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
 }
 </style>

@@ -51,6 +51,10 @@ export function useGameSocket(sessionId: string) {
       case "state_update":
         if (data.phase) store.updatePhase(data.phase);
         if (data.atmosphere) store.updateAtmosphere(data.atmosphere);
+        if (data.turn_state) store.updateTurnState(data.turn_state);
+        break;
+      case "turn_update":
+        if (data.turn_state) store.updateTurnState(data.turn_state);
         break;
       case "system":
         store.addNarrative("system", data.content);

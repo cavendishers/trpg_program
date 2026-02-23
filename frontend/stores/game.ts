@@ -32,12 +32,22 @@ interface NarrativeEntry {
   timestamp: number;
 }
 
+interface TurnState {
+  mode: "exploration" | "combat";
+  turn_queue: string[];
+  current_index: number;
+  actions_remaining: Record<string, number>;
+  round_number: number;
+  active_character_id: string | null;
+}
+
 interface GameState {
   sessionId: string;
   scenarioTitle: string;
   phase: string;
   party: Character[];
   activeCharacterId: string;
+  turnState: TurnState;
   narrativeLog: NarrativeEntry[];
   clues: string[];
   atmosphere: string;
@@ -51,6 +61,14 @@ export const useGameStore = defineStore("game", {
     phase: "lobby",
     party: [],
     activeCharacterId: "",
+    turnState: {
+      mode: "exploration",
+      turn_queue: [],
+      current_index: 0,
+      actions_remaining: {},
+      round_number: 0,
+      active_character_id: null,
+    },
     narrativeLog: [],
     clues: [],
     atmosphere: "calm",
@@ -85,6 +103,14 @@ export const useGameStore = defineStore("game", {
     },
     setActiveCharacter(id: string) {
       this.activeCharacterId = id;
+    },
+    updateTurnState(ts: TurnState) {
+      this.turnState = ts;
+      if (ts.mode === "combat" && ts.turn_queue.length > 0) {
+        this.activeCharacterId = ts.turn_queue[ts.current_index];
+      } else if (ts.active_character_id) {
+        this.activeCharacterId = ts.active_character_id;
+      }
     },
     addNarrative(type: NarrativeEntry["type"], content: string) {
       this.narrativeLog.push({ type, content, timestamp: Date.now() });
