@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: "AI TRPG - 克苏鲁跑团",
+      meta: [
+        { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
+      ],
       link: [
         {
           rel: "stylesheet",

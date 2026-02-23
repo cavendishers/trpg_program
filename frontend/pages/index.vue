@@ -215,4 +215,13 @@ async function selectScenario(s: any) {
   color: var(--text-dim);
   font-size: 12px;
 }
+@media (max-width: 768px) {
+  .home { padding: 20px 12px; }
+  .title-block { margin-bottom: 24px; }
+  .ascii-title { font-size: 6px; }
+  .subtitle { font-size: 18px; }
+  .scenario-card, .save-card { padding: 10px; }
+  .scenario-title { font-size: 18px; }
+  .save-title { font-size: 16px; }
+}
 </style>

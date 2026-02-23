@@ -11,6 +11,8 @@
         v-model="text"
         placeholder="What do you do?"
         @keydown.enter="send"
+        @focus="emit('focus')"
+        @blur="emit('blur')"
       />
       <button class="send-btn" @click="send">&gt;</button>
     </div>
@@ -18,7 +20,11 @@
 </template>
 
 <script setup lang="ts">
-const emit = defineEmits<{ send: [text: string] }>();
+const emit = defineEmits<{
+  send: [text: string];
+  focus: [];
+  blur: [];
+}>();
 const text = ref("");
 
 function send() {
@@ -58,5 +64,12 @@ function send() {
   font-size: 24px;
   color: var(--text-amber);
   border-color: var(--text-amber);
+}
+@media (max-width: 768px) {
+  .action-input { padding: 8px 10px; }
+  .quick-actions { gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+  .quick-actions button { font-size: 14px; padding: 6px 10px; min-height: 36px; }
+  .input-row input { font-size: 16px; min-height: 44px; }
+  .send-btn { min-height: 44px; }
 }
 </style>

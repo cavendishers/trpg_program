@@ -31,4 +31,7 @@ defineProps<{ clues: string[] }>();
   color: var(--text-dim);
   font-size: 14px;
 }
+@media (max-width: 768px) {
+  .clue-item { font-size: 14px; margin: 4px 0; padding-bottom: 4px; }
+}
 </style>

@@ -70,4 +70,9 @@ watch(
   color: var(--text-dim);
   margin-right: 6px;
 }
+@media (max-width: 768px) {
+  .narrative-panel { padding: 10px 12px; }
+  .narrative-entry { font-size: 16px; margin: 8px 0; line-height: 1.7; }
+  .narrative-entry.system { font-size: 14px; }
+}
 </style>

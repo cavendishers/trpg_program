@@ -176,4 +176,10 @@ const topSkills = computed(() => {
   border: 1px solid var(--text-red);
   color: var(--text-red);
 }
+@media (max-width: 768px) {
+  .attr-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .attr-val { font-size: 18px; }
+  .skills-list { grid-template-columns: 1fr; }
+  .section-label { margin-top: 8px; font-size: 13px; }
+}
 </style>

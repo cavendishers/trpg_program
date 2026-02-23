@@ -281,4 +281,13 @@ async function startGame() {
   opacity: 0.3;
   cursor: not-allowed;
 }
+@media (max-width: 768px) {
+  .setup-page { padding: 16px 12px; }
+  .scenario-info { font-size: 14px; }
+  .form-row { flex-direction: column; }
+  .form-row input { width: 100%; }
+  .gen-row { flex-direction: column; }
+  .gen-row input { width: 100%; }
+  .start-btn { font-size: 18px; padding: 12px; position: sticky; bottom: 0; background: var(--bg-primary); }
+}
 </style>
