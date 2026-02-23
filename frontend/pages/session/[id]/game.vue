@@ -41,21 +41,29 @@
         :class="{ 'is-collapsed': isMobile && isBottomCollapsed }"
       >
         <!-- Mobile tab bar -->
-        <div v-if="isMobile" class="mobile-tab-bar">
+        <div v-if="isMobile" class="mobile-tab-bar" role="tablist">
           <button
+            role="tab" :aria-selected="activeTab === 'character'"
             class="tab-btn" :class="{ active: activeTab === 'character' }"
             @click="setTab('character')"
           >[ 角色 ]</button>
           <button
+            role="tab" :aria-selected="activeTab === 'clues'"
             class="tab-btn" :class="{ active: activeTab === 'clues' }"
             @click="setTab('clues')"
           >[ 线索 ]</button>
           <button
             v-if="store.turnState.mode === 'combat'"
+            role="tab" :aria-selected="activeTab === 'combat'"
             class="tab-btn" :class="{ active: activeTab === 'combat' }"
             @click="setTab('combat')"
           >[ 战斗 ]</button>
-          <button class="tab-collapse" @click="isBottomCollapsed = !isBottomCollapsed">
+          <button
+            class="tab-collapse"
+            aria-label="Toggle bottom panel"
+            :aria-expanded="!isBottomCollapsed"
+            @click="isBottomCollapsed = !isBottomCollapsed"
+          >
             {{ isBottomCollapsed ? '[ + ]' : '[ _ ]' }}
           </button>
         </div>
@@ -169,6 +177,15 @@ function setTab(tab: "character" | "clues" | "combat") {
   activeTab.value = tab;
   isBottomCollapsed.value = false;
 }
+
+watch(
+  () => store.turnState.mode,
+  (newMode) => {
+    if (newMode !== "combat" && activeTab.value === "combat") {
+      activeTab.value = "character";
+    }
+  }
+);
 
 function onInputFocus() {
   if (isMobile.value) isBottomCollapsed.value = true;
