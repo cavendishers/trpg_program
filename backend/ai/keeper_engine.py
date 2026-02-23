@@ -21,6 +21,7 @@ class KeeperEngine:
         player_input: str,
         characters: list[CoCCharacter],
         plot_progress: str = "",
+        turn_state: dict | None = None,
     ) -> KPResponse:
         messages = build_messages(
             scenario=self.scenario,
@@ -28,6 +29,7 @@ class KeeperEngine:
             plot_progress=plot_progress,
             history=self.history,
             player_input=player_input,
+            turn_state=turn_state,
         )
 
         ai_resp = await self.provider.generate(messages)

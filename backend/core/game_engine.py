@@ -78,6 +78,7 @@ class GameEngine:
             player_input=opening_prompt,
             characters=party,
             plot_progress=progress,
+            turn_state=self.turn_manager.to_dict(),
         )
 
         return {
@@ -154,6 +155,7 @@ class GameEngine:
             player_input=player_input,
             characters=party,
             plot_progress=progress,
+            turn_state=self.turn_manager.to_dict(),
         )
 
         # Step 2: Execute game directives
