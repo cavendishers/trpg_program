@@ -59,6 +59,9 @@ function handleSave() {
 }
 
 onMounted(async () => {
+  // Track active session for smart resume on homepage
+  localStorage.setItem("trpg_active_session", sessionId);
+
   // Fetch session state to populate character (critical for resume flow)
   try {
     const state = await $fetch<any>(
@@ -77,6 +80,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  localStorage.removeItem("trpg_active_session");
   disconnect();
 });
 </script>
@@ -97,7 +101,8 @@ onUnmounted(() => {
 }
 .header-title {
   color: var(--text-amber);
-  font-size: 16px;
+  font-size: 18px;
+  letter-spacing: 1px;
 }
 .header-actions {
   display: flex;
@@ -107,9 +112,9 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid var(--text-dim);
   color: var(--text-dim);
-  padding: 2px 10px;
+  padding: 4px 14px;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 .save-btn:hover {
@@ -118,7 +123,7 @@ onUnmounted(() => {
 }
 .header-status {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: 16px;
 }
 .online { color: var(--text-primary); }
 .offline { color: var(--text-red); }
@@ -134,7 +139,7 @@ onUnmounted(() => {
   min-width: 0;
 }
 .side-column {
-  width: 300px;
+  width: 360px;
   border-left: 1px solid var(--border-color);
   overflow-y: auto;
   display: flex;

@@ -146,7 +146,10 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 await websocket.send_json({"type": "pong"})
 
     except WebSocketDisconnect:
-        pass
+        try:
+            engine.save_to_file("auto")
+        except Exception:
+            pass
     except Exception as e:
         try:
             await websocket.send_json({

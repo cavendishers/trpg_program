@@ -20,6 +20,7 @@ _sessions: dict[str, GameEngine] = {}
 
 class CreateSessionRequest(BaseModel):
     scenario_id: str
+    force_new: bool = False
 
 
 @router.post("")
@@ -30,11 +31,28 @@ async def create_session(req: CreateSessionRequest):
     except FileNotFoundError:
         raise HTTPException(404, f"Scenario not found: {req.scenario_id}")
 
+    # Auto-resume: check for existing save unless force_new
+    if not req.force_new:
+        existing = GameEngine.find_latest_save(req.scenario_id)
+        if existing:
+            provider = get_ai_provider()
+            chars = get_character_service()
+            engine = GameEngine(provider, scenario, chars)
+            engine.load_save_data(existing["data"])
+            old_id = existing["data"].get("session", {}).get("id", engine.session.id)
+            engine.session.id = old_id
+            _sessions[old_id] = engine
+            return {
+                "session_id": old_id,
+                "scenario": scenario.meta.title,
+                "resumed": True,
+            }
+
     provider = get_ai_provider()
     chars = get_character_service()
     engine = GameEngine(provider, scenario, chars)
     _sessions[engine.session.id] = engine
-    return {"session_id": engine.session.id, "scenario": scenario.meta.title}
+    return {"session_id": engine.session.id, "scenario": scenario.meta.title, "resumed": False}
 
 
 @router.get("/{session_id}")

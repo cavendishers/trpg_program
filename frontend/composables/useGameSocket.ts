@@ -5,6 +5,12 @@ export function useGameSocket(sessionId: string) {
   const store = useGameStore();
   let ws: WebSocket | null = null;
 
+  function handleBeforeUnload() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "save_game", slot: "auto" }));
+    }
+  }
+
   function connect() {
     const url = `${config.public.wsBase}/api/game/${sessionId}/ws`;
     ws = new WebSocket(url);
@@ -21,6 +27,8 @@ export function useGameSocket(sessionId: string) {
       const data = JSON.parse(event.data);
       handleMessage(data);
     };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
   }
 
   function handleMessage(data: any) {
@@ -70,6 +78,7 @@ export function useGameSocket(sessionId: string) {
   }
 
   function disconnect() {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
     ws?.close();
     ws = null;
   }

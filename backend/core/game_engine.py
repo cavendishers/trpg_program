@@ -296,6 +296,25 @@ class GameEngine:
             })
         return sorted(results, key=lambda s: s["modified"], reverse=True)
 
+    @staticmethod
+    def find_latest_save(scenario_id: str) -> Optional[dict]:
+        """Find the most recent auto-save for a given scenario."""
+        if not SAVES_DIR.exists():
+            return None
+        best = None
+        best_mtime = 0.0
+        for f in SAVES_DIR.glob("*_auto.json"):
+            try:
+                data = json.loads(f.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            if data.get("scenario_id") == scenario_id:
+                mtime = f.stat().st_mtime
+                if mtime > best_mtime:
+                    best_mtime = mtime
+                    best = {"filename": f.name, "data": data}
+        return best
+
     def load_from_file(self, slot: str = "auto") -> bool:
         """Load game state from a JSON file. Returns True if successful."""
         filename = f"{self.session.id}_{slot}.json"

@@ -94,7 +94,11 @@ async function selectScenario(s: any) {
       `${config.public.apiBase}/api/sessions`,
       { method: "POST", body: { scenario_id: s.id } }
     );
-    router.push(`/session/${session.session_id}/setup`);
+    if (session.resumed) {
+      router.push(`/session/${session.session_id}/game`);
+    } else {
+      router.push(`/session/${session.session_id}/setup`);
+    }
   } catch (e) {
     console.error("Failed to create session:", e);
   }
