@@ -13,6 +13,7 @@ from backend.ai.response_parser import GameDirective, KPResponse
 from backend.character.models import CoCCharacter
 from backend.character.service import CharacterService
 from backend.core.state_machine import GamePhase, StateMachine
+from backend.core.turn_manager import TurnManager, TurnMode
 from backend.rules.dice import roll_d100, is_success, roll_damage
 from backend.rules.sanity import san_check
 from backend.rules.skill_check import perform_check
@@ -48,6 +49,7 @@ class GameEngine:
         self.guardian = PlotGuardian(scenario)
         self.keeper = KeeperEngine(provider, scenario)
         self.session = GameSession(scenario_id=scenario.meta.id)
+        self.turn_manager = TurnManager()
 
     def start_game(self) -> GamePhase:
         self.state.transition(GamePhase.SCENARIO_INTRO)
@@ -83,6 +85,7 @@ class GameEngine:
             "atmosphere": kp_resp.atmosphere,
             "npc_actions": [a.model_dump() for a in kp_resp.npc_actions],
             "phase": self.state.phase.value,
+            "turn_state": self.turn_manager.to_dict(),
         }
 
     async def generate_party(self, count: int = 3) -> list:
@@ -125,6 +128,24 @@ class GameEngine:
         self, player_input: str, character_id: str = ""
     ) -> dict:
         """Main game loop: player input -> AI -> directives -> results."""
+        # Validate actor turn in combat mode
+        if (
+            self.turn_manager.mode == TurnMode.COMBAT
+            and character_id
+            and not self.turn_manager.can_act(character_id)
+        ):
+            return {
+                "narrative": "",
+                "directives": [],
+                "continuation": None,
+                "atmosphere": None,
+                "npc_actions": [],
+                "clues_discovered": [],
+                "phase": self.state.phase.value,
+                "turn_state": self.turn_manager.to_dict(),
+                "error": "not_your_turn",
+            }
+
         party = self.characters.list_party()
         progress = self.guardian.generate_progress_prompt()
 
@@ -141,6 +162,15 @@ class GameEngine:
             result = self._execute_directive(directive, character_id)
             if result:
                 results.append(result)
+
+        # Step 2.5: Handle turn-related directives
+        self._handle_turn_directives(kp_resp.game_directives, party)
+
+        # Consume action in combat mode
+        if self.turn_manager.mode == TurnMode.COMBAT and character_id:
+            self.turn_manager.consume_action(character_id)
+            if self.turn_manager.actions_remaining.get(character_id, 0) <= 0:
+                self.turn_manager.advance_turn()
 
         # Step 3: If directives produced results, feed back to AI
         continuation = None
@@ -174,6 +204,7 @@ class GameEngine:
             "npc_actions": [a.model_dump() for a in kp_resp.npc_actions],
             "clues_discovered": discovered,
             "phase": self.state.phase.value,
+            "turn_state": self.turn_manager.to_dict(),
         }
 
     def _execute_directive(
@@ -184,6 +215,24 @@ class GameEngine:
         elif directive.type == "san_check":
             return self._handle_san_check(directive, character_id)
         return None
+
+    def _handle_turn_directives(
+        self, directives: list[GameDirective], party: list[CoCCharacter]
+    ) -> None:
+        """Process turn-related AI directives (mode switch, character switch, etc.)."""
+        for d in directives:
+            if d.type == "mode_switch":
+                if d.mode == "combat":
+                    self.turn_manager.init_combat(party)
+                elif d.mode == "exploration":
+                    self.turn_manager.end_combat()
+            elif d.type == "switch_character":
+                if d.next_character_id and self.characters.get_character(d.next_character_id):
+                    self.turn_manager.force_switch(d.next_character_id)
+            elif d.type == "grant_extra_action":
+                target = d.target_character or d.next_character_id
+                if target:
+                    self.turn_manager.grant_extra_action(target, d.action_count)
 
     def _handle_skill_check(
         self, directive: GameDirective, character_id: str
@@ -263,6 +312,7 @@ class GameEngine:
             "keeper_tokens": self.keeper._total_tokens,
             "discovered_clues": list(self.guardian.discovered_clues),
             "completed_points": list(self.guardian.completed_points),
+            "turn_state": self.turn_manager.to_dict(),
         }
 
     def load_save_data(self, data: dict) -> None:
@@ -279,6 +329,12 @@ class GameEngine:
         # Restore guardian state
         self.guardian.discovered_clues = set(data.get("discovered_clues", []))
         self.guardian.completed_points = set(data.get("completed_points", []))
+        # Restore turn state (default to exploration if absent for old saves)
+        turn_data = data.get("turn_state")
+        if turn_data:
+            self.turn_manager = TurnManager.from_dict(turn_data)
+        else:
+            self.turn_manager = TurnManager()
 
     def save_to_file(self, slot: str = "auto") -> Path:
         """Save game state to a JSON file."""

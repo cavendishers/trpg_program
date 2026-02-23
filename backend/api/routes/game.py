@@ -34,6 +34,7 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 "type": "state_update",
                 "phase": opening["phase"],
                 "atmosphere": opening.get("atmosphere", "calm"),
+                "turn_state": opening.get("turn_state"),
             })
         else:
             # Reconnection / resume: replay last AI narrative
@@ -67,6 +68,12 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 "content": "已从存档恢复，继续你的冒险...",
             })
 
+            # Send current turn state on reconnection
+            await websocket.send_json({
+                "type": "turn_update",
+                "turn_state": engine.turn_manager.to_dict(),
+            })
+
         while True:
             data = await websocket.receive_json()
             msg_type = data.get("type", "")
@@ -79,6 +86,18 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                     player_input=content,
                     character_id=character_id,
                 )
+
+                # Handle not_your_turn error
+                if result.get("error") == "not_your_turn":
+                    await websocket.send_json({
+                        "type": "system",
+                        "content": "现在不是该角色的行动回合。",
+                    })
+                    await websocket.send_json({
+                        "type": "turn_update",
+                        "turn_state": result["turn_state"],
+                    })
+                    continue
 
                 # Send narrative
                 await websocket.send_json({
@@ -121,6 +140,13 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                     "phase": result["phase"],
                     "atmosphere": result.get("atmosphere", "calm"),
                 })
+
+                # Send turn state update
+                if result.get("turn_state"):
+                    await websocket.send_json({
+                        "type": "turn_update",
+                        "turn_state": result["turn_state"],
+                    })
 
                 # Auto-save after each action
                 try:

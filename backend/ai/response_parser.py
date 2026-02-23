@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 
 class GameDirective(BaseModel):
-    type: str  # "skill_check" | "san_check" | "combat" | "clue_discovered"
+    type: str  # "skill_check" | "san_check" | "combat" | "clue_discovered" | "mode_switch" | "switch_character" | "grant_extra_action"
     skill: str = ""
     difficulty: str = "regular"
     reason: str = ""
@@ -18,6 +18,10 @@ class GameDirective(BaseModel):
     san_loss_failure: str = "1d6"
     # clue fields
     clue_id: str = ""
+    # turn management fields
+    mode: str = ""  # "combat" | "exploration" (for mode_switch)
+    next_character_id: str = ""  # for switch_character
+    action_count: int = 1  # for grant_extra_action
 
 
 class NPCAction(BaseModel):
