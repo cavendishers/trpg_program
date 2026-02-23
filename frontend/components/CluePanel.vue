@@ -15,12 +15,17 @@ defineProps<{ clues: string[] }>();
 <style scoped>
 .clue-item {
   color: var(--text-secondary);
-  margin: 4px 0;
+  margin: 6px 0;
   font-size: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px dotted var(--border-color);
+}
+.clue-item:last-child {
+  border-bottom: none;
 }
 .clue-check {
-  color: var(--text-primary);
-  margin-right: 4px;
+  color: var(--text-amber);
+  margin-right: 6px;
 }
 .empty {
   color: var(--text-dim);

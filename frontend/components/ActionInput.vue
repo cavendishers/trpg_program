@@ -32,17 +32,17 @@ function send() {
 <style scoped>
 .action-input {
   border-top: 1px solid var(--border-color);
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: var(--bg-secondary);
 }
 .quick-actions {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .quick-actions button {
-  font-size: 14px;
-  padding: 4px 12px;
+  font-size: 16px;
+  padding: 6px 16px;
 }
 .input-row {
   display: flex;
@@ -50,10 +50,12 @@ function send() {
 }
 .input-row input {
   flex: 1;
+  padding: 10px 14px;
+  font-size: 18px;
 }
 .send-btn {
-  width: 40px;
-  font-size: 22px;
+  width: 44px;
+  font-size: 24px;
   color: var(--text-amber);
   border-color: var(--text-amber);
 }

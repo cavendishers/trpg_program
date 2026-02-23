@@ -36,34 +36,38 @@ watch(
 .narrative-panel {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 20px;
 }
 .narrative-entry {
-  margin: 8px 0;
-  line-height: 1.5;
+  margin: 12px 0;
+  line-height: 1.6;
+  font-size: 18px;
 }
 .narrative-entry.narrative {
   color: var(--text-primary);
 }
 .narrative-entry.dice_result {
   color: var(--text-amber);
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-left: 2px solid var(--text-amber);
+  background: rgba(255, 170, 0, 0.06);
 }
 .narrative-entry.system {
   color: var(--text-dim);
   font-size: 16px;
+  border-left: 2px solid var(--border-color);
+  padding-left: 10px;
 }
 .dice-icon {
   display: inline-block;
   background: var(--text-amber);
   color: var(--bg-primary);
-  padding: 1px 4px;
-  font-size: 12px;
-  margin-right: 6px;
+  padding: 2px 6px;
+  font-size: 13px;
+  margin-right: 8px;
 }
 .system-prefix {
   color: var(--text-dim);
-  margin-right: 4px;
+  margin-right: 6px;
 }
 </style>

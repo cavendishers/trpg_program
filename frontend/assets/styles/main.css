@@ -93,16 +93,16 @@ input:focus, textarea:focus {
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  padding: 12px;
+  padding: 14px;
 }
 
 .panel-title {
   color: var(--text-amber);
-  font-size: 14px;
+  font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -111,16 +111,16 @@ input:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 4px 0;
+  margin: 6px 0;
 }
 .stat-bar-label {
-  width: 32px;
+  width: 36px;
   color: var(--text-amber);
-  font-size: 14px;
+  font-size: 16px;
 }
 .stat-bar-track {
   flex: 1;
-  height: 12px;
+  height: 14px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
 }
@@ -132,9 +132,9 @@ input:focus, textarea:focus {
 .stat-bar-fill.san { background: #6666ff; }
 .stat-bar-fill.mp { background: #9933ff; }
 .stat-bar-value {
-  width: 60px;
+  width: 64px;
   text-align: right;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Glitch effect for low sanity */

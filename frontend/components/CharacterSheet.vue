@@ -94,85 +94,86 @@ const topSkills = computed(() => {
 <style scoped>
 .occupation {
   color: var(--text-dim);
-  font-size: 12px;
-  margin-bottom: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 .section-label {
   color: var(--text-amber);
-  font-size: 11px;
-  margin-top: 10px;
-  margin-bottom: 4px;
+  font-size: 14px;
+  margin-top: 12px;
+  margin-bottom: 6px;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 2px;
+  padding-bottom: 3px;
+  letter-spacing: 2px;
 }
 .attr-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
+  gap: 6px 4px;
 }
 .attr-cell {
   text-align: center;
-  padding: 2px 0;
+  padding: 4px 0;
+  background: rgba(0, 255, 0, 0.03);
+  border: 1px solid var(--border-color);
 }
 .attr-key {
   display: block;
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
 }
 .attr-val {
-  font-size: 16px;
+  font-size: 22px;
   color: var(--text-primary);
 }
 .derived-row {
   display: flex;
   justify-content: space-around;
   color: var(--text-secondary);
-  font-size: 12px;
-  margin-top: 6px;
-  padding: 4px 0;
+  font-size: 14px;
+  margin-top: 8px;
+  padding: 6px 0;
   border-top: 1px solid var(--border-color);
 }
 .skills-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1px 8px;
+  gap: 2px 10px;
 }
 .skill-row {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  padding: 1px 0;
+  font-size: 14px;
+  padding: 2px 0;
 }
 .skill-name { color: var(--text-secondary); }
 .skill-val { color: var(--text-primary); }
 .inventory-list {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 .inv-item {
-  padding: 2px 0;
+  padding: 3px 0;
   border-bottom: 1px dotted var(--border-color);
+}
+.inv-item::before {
+  content: "> ";
+  color: var(--text-dim);
 }
 .empty-hint {
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 13px;
   font-style: italic;
 }
 .conditions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
 }
 .condition-tag {
-  font-size: 11px;
-  padding: 1px 6px;
+  font-size: 13px;
+  padding: 2px 8px;
   border: 1px solid var(--text-red);
   color: var(--text-red);
-}
-.luck-line {
-  color: var(--text-amber);
-  font-size: 14px;
-  margin-top: 8px;
-  text-align: center;
 }
 </style>
