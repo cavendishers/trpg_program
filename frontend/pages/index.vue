@@ -20,7 +20,10 @@
         class="save-card"
         @click="resumeGame(s)"
       >
-        <div class="save-title">{{ s.scenario_title || s.scenario_id }}</div>
+        <div class="save-header">
+          <div class="save-title">{{ s.scenario_title || s.scenario_id }}</div>
+          <button class="delete-btn" @click.stop="deleteSave(s)" title="Delete save">X</button>
+        </div>
         <div class="save-meta">
           {{ s.characters.join(', ') || 'No character' }} | {{ s.phase }} | {{ s.slot }}
         </div>
@@ -85,6 +88,18 @@ async function resumeGame(save: any) {
     router.push(`/session/${result.session_id}/game`);
   } catch (e) {
     console.error("Failed to resume:", e);
+  }
+}
+
+async function deleteSave(save: any) {
+  if (!confirm(`Delete save "${save.scenario_title || save.filename}"?`)) return;
+  try {
+    await $fetch(`${config.public.apiBase}/api/saves/${save.filename}`, {
+      method: "DELETE",
+    });
+    saves.value = saves.value.filter((s: any) => s.filename !== save.filename);
+  } catch (e) {
+    console.error("Failed to delete save:", e);
   }
 }
 
@@ -172,6 +187,24 @@ async function selectScenario(s: any) {
 .save-title {
   color: var(--text-primary);
   font-size: 18px;
+}
+.save-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.delete-btn {
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.delete-btn:hover {
+  border-color: var(--text-red);
+  color: var(--text-red);
 }
 .save-meta {
   color: var(--text-dim);

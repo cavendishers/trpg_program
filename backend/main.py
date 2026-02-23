@@ -29,6 +29,16 @@ def create_app() -> FastAPI:
         from backend.core.game_engine import GameEngine
         return {"saves": GameEngine.list_all_saves()}
 
+    @app.delete("/api/saves/{filename}")
+    async def delete_save(filename: str):
+        from backend.core.game_engine import SAVES_DIR
+        from fastapi import HTTPException
+        path = SAVES_DIR / filename
+        if not path.exists():
+            raise HTTPException(404, "Save file not found")
+        path.unlink()
+        return {"status": "deleted", "filename": filename}
+
     return app
 
 
