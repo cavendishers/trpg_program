@@ -85,6 +85,42 @@ class GameEngine:
             "phase": self.state.phase.value,
         }
 
+    async def generate_party(self, count: int = 3) -> list:
+        """Use AI to generate a party of investigators suited for the scenario."""
+        era = getattr(self.scenario.meta, "era", "1920s")
+        title = self.scenario.meta.title
+        prompt = (
+            f"[系统] 请为剧本《{title}》（{era}）生成 {count} 名调查员。\n"
+            "对每个角色，只返回 JSON 数组，每个元素包含：\n"
+            '{"name": "角色名", "occupation": "职业", "age": 年龄}\n'
+            "角色应该职业互补，适合这个剧本的背景。只返回 JSON 数组，不要其他内容。"
+        )
+        ai_resp = await self.keeper.provider.generate([
+            {"role": "user", "content": prompt}
+        ])
+        import re
+        match = re.search(r"\[.*\]", ai_resp.content, re.DOTALL)
+        if not match:
+            return [self.characters.create_pc(
+                name=f"调查员{i+1}", player_name="Player 1", occupation="侦探"
+            ) for i in range(count)]
+        try:
+            specs = json.loads(match.group())
+        except json.JSONDecodeError:
+            return [self.characters.create_pc(
+                name=f"调查员{i+1}", player_name="Player 1", occupation="侦探"
+            ) for i in range(count)]
+        result = []
+        for spec in specs[:count]:
+            char = self.characters.create_pc(
+                name=spec.get("name", f"调查员{len(result)+1}"),
+                player_name="Player 1",
+                occupation=spec.get("occupation", ""),
+                age=spec.get("age", 25),
+            )
+            result.append(char)
+        return result
+
     async def process_player_input(
         self, player_input: str, character_id: str = ""
     ) -> dict:

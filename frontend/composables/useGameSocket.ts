@@ -66,7 +66,7 @@ export function useGameSocket(sessionId: string) {
     ws.send(
       JSON.stringify({
         type: "player_action",
-        character_id: store.character?.id || "",
+        character_id: store.activeCharacter?.id || "",
         content,
       })
     );

@@ -36,7 +36,8 @@ interface GameState {
   sessionId: string;
   scenarioTitle: string;
   phase: string;
-  character: Character | null;
+  party: Character[];
+  activeCharacterId: string;
   narrativeLog: NarrativeEntry[];
   clues: string[];
   atmosphere: string;
@@ -48,19 +49,42 @@ export const useGameStore = defineStore("game", {
     sessionId: "",
     scenarioTitle: "",
     phase: "lobby",
-    character: null,
+    party: [],
+    activeCharacterId: "",
     narrativeLog: [],
     clues: [],
     atmosphere: "calm",
     connected: false,
   }),
+  getters: {
+    activeCharacter(state): Character | null {
+      return state.party.find((c) => c.id === state.activeCharacterId) || state.party[0] || null;
+    },
+  },
   actions: {
     setSession(id: string, title: string) {
       this.sessionId = id;
       this.scenarioTitle = title;
     },
+    setParty(chars: Character[]) {
+      this.party = chars;
+      if (!this.activeCharacterId && chars.length > 0) {
+        this.activeCharacterId = chars[0].id;
+      }
+    },
     setCharacter(char: Character) {
-      this.character = char;
+      const idx = this.party.findIndex((c) => c.id === char.id);
+      if (idx >= 0) {
+        this.party[idx] = char;
+      } else {
+        this.party.push(char);
+      }
+      if (!this.activeCharacterId) {
+        this.activeCharacterId = char.id;
+      }
+    },
+    setActiveCharacter(id: string) {
+      this.activeCharacterId = id;
     },
     addNarrative(type: NarrativeEntry["type"], content: string) {
       this.narrativeLog.push({ type, content, timestamp: Date.now() });

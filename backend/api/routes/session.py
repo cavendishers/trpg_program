@@ -109,6 +109,60 @@ class ResumeRequest(BaseModel):
     filename: str
 
 
+class SessionCharacterRequest(BaseModel):
+    name: str
+    player_name: str = "Player 1"
+    occupation: str = ""
+    age: int = 25
+
+
+class GeneratePartyRequest(BaseModel):
+    count: int = 3
+
+
+@router.get("/{session_id}/characters")
+async def list_session_characters(session_id: str):
+    engine = _sessions.get(session_id)
+    if not engine:
+        raise HTTPException(404, "Session not found")
+    party = engine.characters.list_party()
+    return [c.model_dump() for c in party]
+
+
+@router.post("/{session_id}/characters")
+async def add_session_character(session_id: str, req: SessionCharacterRequest):
+    engine = _sessions.get(session_id)
+    if not engine:
+        raise HTTPException(404, "Session not found")
+    char = engine.characters.create_pc(
+        name=req.name,
+        player_name=req.player_name,
+        occupation=req.occupation,
+        age=req.age,
+    )
+    return char.model_dump()
+
+
+@router.delete("/{session_id}/characters/{char_id}")
+async def remove_session_character(session_id: str, char_id: str):
+    engine = _sessions.get(session_id)
+    if not engine:
+        raise HTTPException(404, "Session not found")
+    if char_id not in engine.characters._characters:
+        raise HTTPException(404, "Character not found")
+    del engine.characters._characters[char_id]
+    return {"status": "deleted"}
+
+
+@router.post("/{session_id}/characters/generate")
+async def generate_party(session_id: str, req: GeneratePartyRequest):
+    engine = _sessions.get(session_id)
+    if not engine:
+        raise HTTPException(404, "Session not found")
+    characters = await engine.generate_party(req.count)
+    return [c.model_dump() for c in characters]
+
+
 @router.post("/resume")
 async def resume_session(req: ResumeRequest):
     """Create a new session from a save file."""

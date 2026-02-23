@@ -22,10 +22,23 @@
       </div>
 
       <div class="side-column">
-        <CharacterSheet
-          v-if="store.character"
-          :character="store.character"
-        />
+        <div
+          v-for="char in store.party"
+          :key="char.id"
+          class="party-member"
+          :class="{ active: char.id === store.activeCharacterId }"
+          @click="store.setActiveCharacter(char.id)"
+        >
+          <CharacterSheet
+            v-if="char.id === store.activeCharacterId"
+            :character="char"
+          />
+          <div v-else class="mini-card">
+            <span class="mini-name">{{ char.name }}</span>
+            <span class="mini-hp">HP {{ char.derived.hp }}/{{ char.derived.hp_max }}</span>
+            <span class="mini-san">SAN {{ char.derived.san }}/{{ char.derived.san_max }}</span>
+          </div>
+        </div>
         <CluePanel :clues="store.clues" />
       </div>
     </div>
@@ -44,8 +57,9 @@ const sessionId = route.params.id as string;
 const { connect, sendAction, saveGame, disconnect } = useGameSocket(sessionId);
 
 const lowSanity = computed(() => {
-  if (!store.character) return false;
-  const { san, san_max } = store.character.derived;
+  const char = store.activeCharacter;
+  if (!char) return false;
+  const { san, san_max } = char.derived;
   return san < san_max * 0.3;
 });
 
@@ -68,7 +82,7 @@ onMounted(async () => {
       `${config.public.apiBase}/api/sessions/${sessionId}/state`
     );
     if (state.party?.length > 0) {
-      store.setCharacter(state.party[0]);
+      store.setParty(state.party);
     }
     if (state.phase) {
       store.updatePhase(state.phase);
@@ -145,5 +159,32 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+.party-member {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+.party-member.active {
+  border-left: 3px solid var(--accent);
+}
+.mini-card {
+  padding: 10px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+.mini-card:hover {
+  background: var(--bg-secondary);
+}
+.mini-name {
+  color: var(--text-primary);
+  flex: 1;
+}
+.mini-hp {
+  color: var(--text-red);
+}
+.mini-san {
+  color: #6666ff;
 }
 </style>
