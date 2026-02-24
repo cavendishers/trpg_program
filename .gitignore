@@ -25,6 +25,9 @@ saves/
 # Claude Code
 .claude/
 
+# Gemini
+.gemini/
+
 # OS
 .DS_Store
 Thumbs.db
