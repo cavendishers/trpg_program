@@ -16,10 +16,14 @@ export default defineNuxtConfig({
       ],
     },
   },
+  devServer: {
+    port: 29474,
+    host: "0.0.0.0",
+  },
   runtimeConfig: {
     public: {
-      apiBase: "http://localhost:8000",
-      wsBase: "ws://localhost:8000",
+      apiBase: "http://mc20.starmc.cn:25032",
+      wsBase: "ws://mc20.starmc.cn:25032",
     },
   },
 });
