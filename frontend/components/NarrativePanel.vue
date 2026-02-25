@@ -36,7 +36,10 @@ watch(
 .narrative-panel {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 16px 20px;
+  min-height: 0;
 }
 .narrative-entry {
   margin: 12px 0;
