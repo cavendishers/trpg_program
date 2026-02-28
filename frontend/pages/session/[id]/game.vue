@@ -254,7 +254,7 @@ onUnmounted(() => {
 .header-status { color: var(--text-dim); font-size: 16px; }
 .online { color: var(--text-primary); }
 .offline { color: var(--text-red); }
-.game-body { flex: 1; display: flex; overflow: hidden; }
+.game-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
 .main-column { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .side-column {
   width: 360px;

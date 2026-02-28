@@ -364,31 +364,36 @@ class GameEngine:
 
     @staticmethod
     def list_all_saves() -> list[dict]:
-        """List all save files across all sessions."""
+        """List all save files across all sessions, deduplicated by session_id."""
         if not SAVES_DIR.exists():
             return []
-        results = []
+        # Collect all saves grouped by session_id
+        by_session: dict[str, dict] = {}
         for f in SAVES_DIR.glob("*.json"):
             try:
                 data = json.loads(f.read_text())
             except (json.JSONDecodeError, OSError):
                 continue
+            session_id = data.get("session", {}).get("id", "")
             pc_names = [
                 c.get("name", "")
                 for c in data.get("characters", {}).values()
                 if not c.get("is_npc", False)
             ]
-            results.append({
+            entry = {
                 "filename": f.name,
-                "session_id": data.get("session", {}).get("id", ""),
+                "session_id": session_id,
                 "scenario_id": data.get("scenario_id", ""),
                 "scenario_title": data.get("scenario_title", data.get("scenario_id", "")),
                 "phase": data.get("phase", ""),
                 "slot": f.stem.split("_", 1)[1] if "_" in f.stem else "unknown",
                 "characters": pc_names,
                 "modified": f.stat().st_mtime,
-            })
-        return sorted(results, key=lambda s: s["modified"], reverse=True)
+            }
+            # Keep only the most recent save per session
+            if session_id not in by_session or entry["modified"] > by_session[session_id]["modified"]:
+                by_session[session_id] = entry
+        return sorted(by_session.values(), key=lambda s: s["modified"], reverse=True)
 
     @staticmethod
     def find_latest_save(scenario_id: str) -> Optional[dict]:

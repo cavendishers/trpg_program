@@ -5,10 +5,10 @@ import json
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from backend.character.service import CharacterService
 from backend.core.game_engine import GameEngine, SAVES_DIR
 from backend.dependencies import (
     get_ai_provider,
-    get_character_service,
     get_scenario_loader,
 )
 
@@ -36,7 +36,7 @@ async def create_session(req: CreateSessionRequest):
         existing = GameEngine.find_latest_save(req.scenario_id)
         if existing:
             provider = get_ai_provider()
-            chars = get_character_service()
+            chars = CharacterService()
             engine = GameEngine(provider, scenario, chars)
             engine.load_save_data(existing["data"])
             old_id = existing["data"].get("session", {}).get("id", engine.session.id)
@@ -49,7 +49,7 @@ async def create_session(req: CreateSessionRequest):
             }
 
     provider = get_ai_provider()
-    chars = get_character_service()
+    chars = CharacterService()
     engine = GameEngine(provider, scenario, chars)
     _sessions[engine.session.id] = engine
     return {"session_id": engine.session.id, "scenario": scenario.meta.title, "resumed": False}
@@ -182,7 +182,7 @@ async def resume_session(req: ResumeRequest):
         raise HTTPException(409, f"Scenario not found: {scenario_id}")
 
     provider = get_ai_provider()
-    chars = get_character_service()
+    chars = CharacterService()
     engine = GameEngine(provider, scenario, chars)
     engine.load_save_data(save_data)
 
