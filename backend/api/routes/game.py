@@ -1,5 +1,6 @@
 """WebSocket game endpoint for real-time gameplay."""
 
+import asyncio
 import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -7,6 +8,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from backend.api.routes.session import get_session_engine
 
 router = APIRouter(tags=["game"])
+
+AUTO_SAVE_INTERVAL = 180  # 3 minutes
 
 
 @router.websocket("/api/game/{session_id}/ws")
@@ -19,6 +22,21 @@ async def game_websocket(websocket: WebSocket, session_id: str):
         await websocket.send_json({"type": "error", "content": "Session not found"})
         await websocket.close()
         return
+
+    # Periodic auto-save task
+    auto_save_task: asyncio.Task | None = None
+
+    async def periodic_auto_save():
+        """Auto-save every AUTO_SAVE_INTERVAL seconds."""
+        try:
+            while True:
+                await asyncio.sleep(AUTO_SAVE_INTERVAL)
+                try:
+                    engine.save_to_file("auto")
+                except Exception:
+                    pass
+        except asyncio.CancelledError:
+            pass
 
     try:
         # Auto-send opening narrative if no history yet
@@ -73,6 +91,9 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 "type": "turn_update",
                 "turn_state": engine.turn_manager.to_dict(),
             })
+
+        # Start periodic auto-save after connection is established
+        auto_save_task = asyncio.create_task(periodic_auto_save())
 
         while True:
             data = await websocket.receive_json()
@@ -148,12 +169,6 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                         "turn_state": result["turn_state"],
                     })
 
-                # Auto-save after each action
-                try:
-                    engine.save_to_file("auto")
-                except Exception:
-                    pass
-
             elif msg_type == "save_game":
                 slot = data.get("slot", "manual")
                 try:
@@ -184,3 +199,6 @@ async def game_websocket(websocket: WebSocket, session_id: str):
             })
         except Exception:
             pass
+    finally:
+        if auto_save_task:
+            auto_save_task.cancel()

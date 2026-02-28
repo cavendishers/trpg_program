@@ -364,11 +364,12 @@ class GameEngine:
 
     @staticmethod
     def list_all_saves() -> list[dict]:
-        """List all save files across all sessions, deduplicated by session_id."""
+        """List all save files, deduplicated by (session_id, slot_type)."""
         if not SAVES_DIR.exists():
             return []
-        # Collect all saves grouped by session_id
-        by_session: dict[str, dict] = {}
+        # Collect saves grouped by (session_id, slot_type)
+        # slot_type is "auto" or the actual slot name (e.g. "manual")
+        by_key: dict[tuple[str, str], dict] = {}
         for f in SAVES_DIR.glob("*.json"):
             try:
                 data = json.loads(f.read_text())
@@ -380,20 +381,21 @@ class GameEngine:
                 for c in data.get("characters", {}).values()
                 if not c.get("is_npc", False)
             ]
+            slot = f.stem.split("_", 1)[1] if "_" in f.stem else "unknown"
             entry = {
                 "filename": f.name,
                 "session_id": session_id,
                 "scenario_id": data.get("scenario_id", ""),
                 "scenario_title": data.get("scenario_title", data.get("scenario_id", "")),
                 "phase": data.get("phase", ""),
-                "slot": f.stem.split("_", 1)[1] if "_" in f.stem else "unknown",
+                "slot": slot,
                 "characters": pc_names,
                 "modified": f.stat().st_mtime,
             }
-            # Keep only the most recent save per session
-            if session_id not in by_session or entry["modified"] > by_session[session_id]["modified"]:
-                by_session[session_id] = entry
-        return sorted(by_session.values(), key=lambda s: s["modified"], reverse=True)
+            key = (session_id, slot)
+            if key not in by_key or entry["modified"] > by_key[key]["modified"]:
+                by_key[key] = entry
+        return sorted(by_key.values(), key=lambda s: s["modified"], reverse=True)
 
     @staticmethod
     def find_latest_save(scenario_id: str) -> Optional[dict]:
