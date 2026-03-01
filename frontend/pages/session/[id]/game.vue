@@ -201,6 +201,9 @@ onMounted(async () => {
 
   localStorage.setItem("trpg_active_session", sessionId);
 
+  // Clear stale narrative log before reconnecting
+  store.clearNarratives();
+
   try {
     const state = await $fetch<any>(
       `${config.public.apiBase}/api/sessions/${sessionId}/state`

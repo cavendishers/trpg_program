@@ -115,6 +115,10 @@ export const useGameStore = defineStore("game", {
     addNarrative(type: NarrativeEntry["type"], content: string) {
       this.narrativeLog.push({ type, content, timestamp: Date.now() });
     },
+    clearNarratives() {
+      this.narrativeLog = [];
+      this.clues = [];
+    },
     addClue(clue: string) {
       if (!this.clues.includes(clue)) this.clues.push(clue);
     },

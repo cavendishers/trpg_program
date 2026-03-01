@@ -55,9 +55,18 @@ async def game_websocket(websocket: WebSocket, session_id: str):
                 "turn_state": opening.get("turn_state"),
             })
         else:
-            # Reconnection / resume: replay last AI narrative
-            for entry in engine.keeper.history[-2:]:
-                if entry["role"] == "assistant":
+            # Reconnection / resume: replay full conversation history
+            for entry in engine.keeper.history:
+                if entry["role"] == "user":
+                    content = entry["content"]
+                    # Skip system prompts (opening, dice results, etc.)
+                    if content.startswith("[系统]") or content.startswith("[System]"):
+                        continue
+                    await websocket.send_json({
+                        "type": "narrative",
+                        "content": f"> {content}",
+                    })
+                elif entry["role"] == "assistant":
                     from backend.ai.response_parser import parse_response
                     try:
                         kp = parse_response(entry["content"])
