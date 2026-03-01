@@ -387,6 +387,7 @@ class GameEngine:
                 "session_id": session_id,
                 "scenario_id": data.get("scenario_id", ""),
                 "scenario_title": data.get("scenario_title", data.get("scenario_id", "")),
+                "save_name": data.get("save_name", ""),
                 "phase": data.get("phase", ""),
                 "slot": slot,
                 "characters": pc_names,

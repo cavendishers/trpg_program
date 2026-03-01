@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from backend.api.routes import character, game, scenario, session
 
@@ -38,6 +39,25 @@ def create_app() -> FastAPI:
             raise HTTPException(404, "Save file not found")
         path.unlink()
         return {"status": "deleted", "filename": filename}
+
+    class RenameSaveRequest(BaseModel):
+        save_name: str
+
+    @app.patch("/api/saves/{filename}")
+    async def rename_save(filename: str, req: RenameSaveRequest):
+        import json
+        from backend.core.game_engine import SAVES_DIR
+        from fastapi import HTTPException
+        path = SAVES_DIR / filename
+        if not path.exists():
+            raise HTTPException(404, "Save file not found")
+        try:
+            data = json.loads(path.read_text())
+        except (json.JSONDecodeError, OSError):
+            raise HTTPException(400, "Invalid save file")
+        data["save_name"] = req.save_name
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
+        return {"status": "renamed", "filename": filename, "save_name": req.save_name}
 
     return app
 

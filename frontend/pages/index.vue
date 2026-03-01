@@ -21,7 +21,19 @@
         @click="resumeGame(s)"
       >
         <div class="save-header">
-          <div class="save-title">{{ s.scenario_title || s.scenario_id }}</div>
+          <div v-if="editingFilename === s.filename" class="save-title-edit" @click.stop>
+            <input
+              ref="editInput"
+              v-model="editName"
+              class="save-name-input"
+              @blur="finishRename(s)"
+              @keydown.enter="finishRename(s)"
+              @keydown.escape="cancelRename"
+            />
+          </div>
+          <div v-else class="save-title" @click.stop="startRename(s)">
+            {{ s.save_name || s.scenario_title || s.scenario_id }}
+          </div>
           <button class="delete-btn" @click.stop="deleteSave(s)" title="Delete save">X</button>
         </div>
         <div class="save-meta">
@@ -61,6 +73,9 @@ const router = useRouter();
 const scenarios = ref<any[]>([]);
 const saves = ref<any[]>([]);
 const loading = ref(true);
+const editingFilename = ref<string | null>(null);
+const editName = ref("");
+const editInput = ref<HTMLInputElement | null>(null);
 
 onMounted(async () => {
   try {
@@ -79,6 +94,39 @@ function formatTime(ts: number) {
   return new Date(ts * 1000).toLocaleString();
 }
 
+function startRename(save: any) {
+  editingFilename.value = save.filename;
+  editName.value = save.save_name || save.scenario_title || save.scenario_id || "";
+  nextTick(() => {
+    editInput.value?.focus();
+    editInput.value?.select();
+  });
+}
+
+function cancelRename() {
+  editingFilename.value = null;
+  editName.value = "";
+}
+
+async function finishRename(save: any) {
+  const newName = editName.value.trim();
+  if (!newName || newName === (save.save_name || save.scenario_title || save.scenario_id)) {
+    cancelRename();
+    return;
+  }
+  try {
+    await $fetch(`${config.public.apiBase}/api/saves/${save.filename}`, {
+      method: "PATCH",
+      body: { save_name: newName },
+    });
+    save.save_name = newName;
+  } catch (e) {
+    console.error("Failed to rename save:", e);
+  }
+  editingFilename.value = null;
+  editName.value = "";
+}
+
 async function resumeGame(save: any) {
   try {
     const result = await $fetch<any>(
@@ -92,7 +140,7 @@ async function resumeGame(save: any) {
 }
 
 async function deleteSave(save: any) {
-  if (!confirm(`Delete save "${save.scenario_title || save.filename}"?`)) return;
+  if (!confirm(`Delete save "${save.save_name || save.scenario_title || save.filename}"?`)) return;
   try {
     await $fetch(`${config.public.apiBase}/api/saves/${save.filename}`, {
       method: "DELETE",
@@ -183,6 +231,26 @@ async function selectScenario(s: any) {
 .save-title {
   color: var(--text-primary);
   font-size: 18px;
+  cursor: text;
+}
+.save-title:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 4px;
+}
+.save-title-edit {
+  flex: 1;
+  margin-right: 8px;
+}
+.save-name-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 18px;
+  padding: 2px 6px;
+  outline: none;
 }
 .save-header {
   display: flex;
@@ -219,5 +287,6 @@ async function selectScenario(s: any) {
   .scenario-card, .save-card { padding: 10px; }
   .scenario-title { font-size: 18px; }
   .save-title { font-size: 16px; }
+  .save-name-input { font-size: 16px; }
 }
 </style>
